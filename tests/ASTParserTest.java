@@ -95,6 +95,7 @@ public class ASTParserTest {
     assertEquals(1, p.tdecls.get(0).vdecls.size());
     assertEquals(null,p.tdecls.get(0).vdecls.get(0).typeName);
     assertEquals("x",p.tdecls.get(0).vdecls.get(0).varName.lexeme());
+    assertEquals(false,p.tdecls.get(0).vdecls.get(0).isConst);
   }
 
   @Test
@@ -395,6 +396,39 @@ public class ASTParserTest {
     } catch(MyPLException e){
       // assertEquals()
     }
+  }
+
+  /* const var tests */
+
+  @Test
+  public void constVarDecl() throws Exception {
+    String s = buildString
+    ("type Node {",
+     "const var x = 4",
+     "}");
+    ASTParser parser = buildParser(s);
+    Program p = parser.parse();
+    assertEquals(1, p.tdecls.size());
+    assertEquals(1, p.tdecls.get(0).vdecls.size());
+    assertEquals(null,p.tdecls.get(0).vdecls.get(0).typeName);
+    assertEquals("x",p.tdecls.get(0).vdecls.get(0).varName.lexeme());
+    assertEquals(true,p.tdecls.get(0).vdecls.get(0).isConst);
+  }
+
+  @Test
+  public void wrongConstDecl() throws Exception {
+    String s = buildString
+    ("type Node {",
+     "const x = 4",
+     "}");
+    ASTParser parser = buildParser(s);
+    try {
+      Program p = parser.parse();
+      fail("syntax error not detected");
+    } catch(MyPLException e){
+      // assertEquals()
+    }
+    
   }
 
 

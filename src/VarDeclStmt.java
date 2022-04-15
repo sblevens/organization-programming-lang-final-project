@@ -8,6 +8,7 @@
 
 public class VarDeclStmt implements Stmt {
 
+  public boolean isConst = false;
   public Token typeName = null;
   public Token varName = null;
   public Expr expr = null;

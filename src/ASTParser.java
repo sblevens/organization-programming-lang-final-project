@@ -158,7 +158,7 @@ public class ASTParser {
 
   private void vdelcs(List<VarDeclStmt> vlist)  throws MyPLException{
     // <vdelcs> ::= ( <vdecl_stmt)*
-    while(match(TokenType.VAR)){
+    while(match(TokenType.VAR) || match(TokenType.CONST)){
       VarDeclStmt v = new VarDeclStmt();
       vdecl_stmt(v);
       vlist.add(v);
@@ -166,7 +166,11 @@ public class ASTParser {
   }
 
   private void vdecl_stmt(VarDeclStmt v)  throws MyPLException{
-    //<vdecl_stmt> ::= VAR ( <dtype> | E ) ID ASSIGN <expr>
+    //<vdecl_stmt> ::= (const | E) VAR ( <dtype> | E ) ID ASSIGN <expr>
+    if(match(TokenType.CONST)){
+      v.isConst = true;
+      advance();
+    }
     eat(TokenType.VAR,"expecting var");
     if(isPrimitiveType()){
       //dtype();
@@ -329,7 +333,7 @@ public class ASTParser {
 
   private void stmts(List<Stmt> s) throws MyPLException {
     //<stmts> ::= ( <stmt> )*
-    while(match(TokenType.VAR) || match(TokenType.ID) || match(TokenType.IF) || match(TokenType.WHILE) || match(TokenType.FOR) || match(TokenType.RETURN) || match(TokenType.DELETE)){
+    while(match(TokenType.VAR) || match(TokenType.CONST) || match(TokenType.ID) || match(TokenType.IF) || match(TokenType.WHILE) || match(TokenType.FOR) || match(TokenType.RETURN) || match(TokenType.DELETE)){
       // Stmt st = null;
       stmt(s);
       // s.add(st);
@@ -337,7 +341,7 @@ public class ASTParser {
   }
   
   private void stmt(List<Stmt> s) throws MyPLException {
-    if(match(TokenType.VAR)){
+    if(match(TokenType.VAR) || match(TokenType.CONST)){
       VarDeclStmt v = new VarDeclStmt();
       vdecl_stmt(v);
       s.add(v);
