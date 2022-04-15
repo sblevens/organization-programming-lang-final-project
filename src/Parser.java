@@ -143,8 +143,11 @@ public class Parser {
     }
   }
 
-  private void vdecl_stmt()  throws MyPLException{
-    //<vdecl_stmt> ::= VAR ( <dtype> | E ) ID ASSIGN <expr>
+  private void vdecl_stmt()  throws MyPLException {
+    //<vdecl_stmt> ::= (const | E) VAR ( <dtype> | E ) ID ASSIGN <expr>
+    if(match(TokenType.CONST)){
+      advance();
+    }
     eat(TokenType.VAR,"expecting var");
     if(isPrimitiveType()){
       //dtype();
@@ -241,13 +244,13 @@ public class Parser {
 
   private void stmts() throws MyPLException {
     //<stmts> ::= ( <stmt> )*
-    while(match(TokenType.VAR) || match(TokenType.ID) || match(TokenType.IF) || match(TokenType.WHILE) || match(TokenType.FOR) || match(TokenType.RETURN) || match(TokenType.DELETE)){
+    while(match(TokenType.VAR) || match(TokenType.CONST) || match(TokenType.ID) || match(TokenType.IF) || match(TokenType.WHILE) || match(TokenType.FOR) || match(TokenType.RETURN) || match(TokenType.DELETE)){
       stmt();
     }
   }
   
   private void stmt() throws MyPLException {
-    if(match(TokenType.VAR)){
+    if(match(TokenType.VAR) || match(TokenType.CONST)){
       vdecl_stmt();
     } else if(match(TokenType.ID)){
       //either assign or call expr

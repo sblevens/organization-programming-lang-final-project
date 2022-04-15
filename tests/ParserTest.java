@@ -1,7 +1,7 @@
 /*
  * File: ParserTest.java
  * Date: Spring 2022
- * Auth: 
+ * Auth: Sami Blevens
  * Desc: Basic unit tests for the MyPL parser class.
  */
 
@@ -91,6 +91,99 @@ public class ParserTest {
             negative cases as well.
   */
 
+  @Test
+  public void typeDeclarations() throws Exception {
+    String s = buildString
+    ("type Node {",
+     " var int v1 = 0",
+     "}");
+    Parser parser = buildParser(s);
+    parser.parse();
+  }
+
+  @Test
+  public void functionReturnDeclarations() throws Exception {
+    String s = buildString 
+    ("fun int f(int i, double d) {",
+     " var int v = 0",
+     "}");
+    Parser parser = buildParser(s);
+    parser.parse();
+  }
+
+  @Test
+  public void expressions() throws Exception {
+    String s = buildString
+    ("fun void e() {",
+     " f = 42 + 43 ",
+     " f = 6%4",
+     " f = new g ",
+     " f = g.d > h",
+     " f = g(s)",
+     " f = neg 43",
+     " f = not k",
+     " f = (43 != 89)",
+     " f = not (g or f)",
+     "}");
+    Parser parser = buildParser(s);
+    parser.parse();
+  }
+
+  @Test
+  public void conditionalStatement() throws Exception {
+    String s = buildString 
+    ("fun void c() {",
+     " if g > h {",
+     "  var k = 12",
+     " } elif g < k {",
+     "  var j = 13",
+     " } else {",
+     "  var k = 14",
+     " }",
+     "}");
+    Parser parser = buildParser(s);
+    parser.parse();
+  }
+
+  @Test
+  public void whileStatement() throws Exception {
+    String s = buildString
+    ("fun void w() {",
+     " while g == k {",
+     "  var g = 9", 
+     " }",
+     "}");
+     Parser parser = buildParser(s);
+     parser.parse();
+  }
+
+  @Test
+  public void forStatement() throws Exception {
+    String s = buildString
+    ("fun void f() {",
+     " for h from 8 upto 12 {",
+     "  var j = \"test\" ",
+     " }",
+     " for h from 8 downto 2 {",
+     "  var g = 9",
+     " }",
+     "}");
+    Parser parser = buildParser(s);
+    parser.parse();
+  }
+  
+  @Test
+  public void returnDeleteStatement() throws Exception {
+    String s = buildString
+    ("fun void r() {",
+     " delete d",
+     " return f",
+     "}");
+    Parser parser = buildParser(s);
+    parser.parse();
+  }
+
+
   
   //------------------------------------------------------------
   // NEGATIVE TEST CASES
@@ -137,4 +230,119 @@ public class ParserTest {
   
   /* add additional negative test cases here */ 
   
+  @Test
+  public void lvalueWithoutId() throws Exception {
+    String s = "fun void main() { l.8 = 8 }";
+    Parser parser = buildParser(s);
+    try {
+      parser.parse();
+      fail("syntax error not detected");
+    } catch(MyPLException e){
+      // assertEquals()
+    }
+  }
+
+  @Test
+  public void invalidParams() throws Exception {
+    String s = "fun void main(fun j) { }" ;
+    Parser parser = buildParser(s);
+    try {
+      parser.parse();
+      fail("syntax error not detected");
+    } catch(MyPLException e){
+      // assertEquals()
+    }
+  }
+
+  @Test
+  public void invalidIfStatement() throws Exception {
+    String s = buildString 
+    ("fun void c() {",
+     " if g > h {",
+     "  var k = 12",
+     " } else g < k {",
+     "  var j = 13",
+     " } elif {",
+     "  var k = 14",
+     " }",
+     "}");
+    Parser parser = buildParser(s);
+    try {
+      parser.parse();
+      fail("syntax error not detected");
+    } catch(MyPLException e){
+      // assertEquals()
+    }
+  }
+
+  @Test
+  public void twoOperators() throws Exception {
+    String s = "fun void main() { var x = 8 + - 9 }";
+    Parser parser = buildParser(s);
+    try {
+      parser.parse();
+      fail("syntax error not detected");
+    } catch(MyPLException e){
+      // assertEquals()
+    }
+  }
+
+  @Test
+  public void noExpressionWhileStatement() throws Exception {
+    String s = "fun void main() { while { var j = 9 } }";
+    Parser parser = buildParser(s);
+    try {
+      parser.parse();
+      fail("syntax error not detected");
+    } catch(MyPLException e){
+      // assertEquals()
+    }
+  }
+
+
+  /* Tests for const */
+
+  @Test
+  public void basicConstVarDecl() throws Exception {
+    String s = "fun void main() { const var x = 0 }";
+    Parser parser = buildParser(s);
+    parser.parse();
+  }
+
+  @Test
+  public void moreStmtsConst() throws Exception {
+    String s = buildString 
+    ("fun void main() {",
+     " var x = 0",
+     " const var k = 12",
+     "}");
+    Parser parser = buildParser(s);
+    parser.parse();
+  }
+
+
+  @Test
+  public void invalidConstVarAssignment() throws Exception {
+    String s = "fun void main() { const x = 0 }";
+    Parser parser = buildParser(s);
+    try {
+      parser.parse();
+      fail("syntax error not detected");
+    } catch(MyPLException e){
+      //assertEquals()
+    }
+  }
+
+  @Test
+  public void invalidConst() throws Exception {
+    String s = "fun void main() { while const { var x = 0 } }";
+    Parser parser = buildParser(s);
+    try {
+      parser.parse();
+      fail("syntax error not detected");
+    } catch(MyPLException e){
+      //assertEquals()
+    }
+  }
+
 }
