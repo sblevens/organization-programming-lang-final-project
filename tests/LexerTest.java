@@ -430,7 +430,19 @@ public class LexerTest {
     }
   }
   
+
+  /* New Tests for const project*/
   
-  
-  
+  @Test
+  public void constTest() throws Exception {
+    String s = "const";
+    InputStream in = new ByteArrayInputStream(s.getBytes("UTF-8"));
+    Lexer lexer = new Lexer(in);
+    Token t = lexer.nextToken();
+    assertEquals(TokenType.CONST, t.type());
+    assertEquals("const", t.lexeme());
+    assertEquals(1, t.line());
+    assertEquals(1, t.column());
+  }
+
 }

@@ -23,7 +23,7 @@ public enum TokenType {
   // reserved words
   VAR, TYPE, WHILE, FOR, FROM, UPTO, DOWNTO, 
   IF, ELIF, ELSE, 
-  FUN, NEW, DELETE, RETURN, NIL,
+  FUN, NEW, DELETE, RETURN, NIL, CONST,
   // identifiers
   ID,
   // end of stream

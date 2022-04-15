@@ -387,6 +387,9 @@ public class Lexer {
       if(str.equals("nil")){
         return new Token(TokenType.NIL,str,line,startCol);
       }
+      if(str.equals("const")){
+        return new Token(TokenType.CONST,str,line,startCol);
+      }
       //data types
       if(str.equals("int")){
         return new Token(TokenType.INT_TYPE,str,line,startCol);
