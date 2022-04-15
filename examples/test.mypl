@@ -1,0 +1,4 @@
+fun int f() {}
+fun void main() {
+   var x = f
+}

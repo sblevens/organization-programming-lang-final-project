@@ -245,7 +245,7 @@ public class StaticChecker implements Visitor {
     String expType = currType;
     String varName = node.varName.lexeme();
 
-    if(!expType.equals("int") && !expType.equals("double") && !expType.equals("char") && !expType.equals("string") && !expType.equals("bool") && !expType.equals("void") && !symbolTable.get(expType).equals("type")){
+    if(!expType.equals("int") && !expType.equals("double") && !expType.equals("char") && !expType.equals("string") && !expType.equals("bool") && !expType.equals("void") && (symbolTable.get(expType) == null || !symbolTable.get(expType).equals("type"))){
       if(node.expr.first instanceof SimpleTerm){
         SimpleTerm s = (SimpleTerm)node.expr.first;
         if(s.rvalue instanceof IDRValue){
