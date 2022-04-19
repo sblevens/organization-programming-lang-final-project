@@ -1393,11 +1393,11 @@ public class StaticCheckerTest {
     assertEquals(3, typeInfo.components("T2").size());
     List<String> components = new ArrayList(typeInfo.components("T2"));
     assertEquals("x", components.get(0));
-    assertEquals("int", typeInfo.get("T2", "x"));
+    assertEquals("int", typeInfo.get("T2", "x").first);
     assertEquals("y", components.get(1));    
-    assertEquals("string", typeInfo.get("T2", "y"));    
+    assertEquals("string", typeInfo.get("T2", "y").first);    
     assertEquals("z", components.get(2));
-    assertEquals("T2", typeInfo.get("T2", "z"));    
+    assertEquals("T2", typeInfo.get("T2", "z").first);    
   }
 
   @Test
@@ -1412,15 +1412,15 @@ public class StaticCheckerTest {
     assertTrue(typeInfo.types().contains("main"));
     assertTrue(typeInfo.types().contains("f"));
     assertEquals(1, typeInfo.components("main").size());
-    assertEquals("void", typeInfo.get("main", "return"));
+    assertEquals("void", typeInfo.get("main", "return").first);
     assertEquals(3, typeInfo.components("f").size());
     List<String> components = new ArrayList(typeInfo.components("f"));
     assertEquals("x", components.get(0));
-    assertEquals("int", typeInfo.get("f", "x"));
+    assertEquals("int", typeInfo.get("f", "x").first);
     assertEquals("y", components.get(1));
-    assertEquals("string", typeInfo.get("f", "y"));    
+    assertEquals("string", typeInfo.get("f", "y").first);    
     assertEquals("return", components.get(2));
-    assertEquals("int", typeInfo.get("f", "return"));    
+    assertEquals("int", typeInfo.get("f", "return").first);    
 
   }
   

@@ -15,13 +15,13 @@ public class SymbolTable {
 
   // the table is a list of environments, where an environment is a
   // mapping (bindings) from strings to objects
-  List<Map<String,String>> environments = new ArrayList<>();
+  List<Map<String,Tuple<String,Boolean>>> environments = new ArrayList<>();
 
 
   // adds an environment to the table (which acts as the "current"
   // environment)
   public void pushEnvironment() {
-    HashMap<String,String> newEnvironment = new HashMap<>();
+    HashMap<String,Tuple<String,Boolean>> newEnvironment = new HashMap<>();
     environments.add(newEnvironment);
   }
 
@@ -32,15 +32,15 @@ public class SymbolTable {
   }
 
   // add binding to current environment
-  public void add(String name, String info) {
+  public void add(String name, String info, boolean isConst) {
     if (size() > 0)
-      environments.get(size() - 1).put(name, info);
+      environments.get(size() - 1).put(name, new Tuple(info,isConst));
   }
 
   // returns first binding for name from the table
-  public String get(String name) {
+  public Tuple<String,Boolean> get(String name) {
     for (int i = size() - 1; i >= 0; --i) {
-      Map<String,String> env = environments.get(i);
+      Map<String,Tuple<String,Boolean>> env = environments.get(i);
       if (env.containsKey(name))
         return env.get(name);
     }
@@ -73,7 +73,7 @@ public class SymbolTable {
     String s = "";
     String r = "";
     for (int i = 0; i < size(); ++i) {
-      Map<String,String> env = environments.get(i);
+      Map<String,Tuple<String,Boolean>> env = environments.get(i);
       s += r + i + ":\n" + r + env + "\n";
       r += " ";
     }

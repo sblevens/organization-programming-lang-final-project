@@ -44,7 +44,7 @@ public class StaticChecker implements Visitor {
     types.addAll(Arrays.asList("int", "double", "bool", "char", "string",
                                "void"));
     for (String type : typeInfo.types())
-      if (symbolTable.get(type).equals("type"))
+      if (symbolTable.get(type).first.equals("type"))
         types.add(type);
     return types;
   }
@@ -125,7 +125,7 @@ public class StaticChecker implements Visitor {
       if (symbolTable.nameExists(t))
         error("type '" + t + "' already defined", tdecl.typeName);
       // add as a record type to the symbol table
-      symbolTable.add(t, "type");
+      symbolTable.add(t, "type",false);
       // add initial type info (rest added by TypeDecl visit function)
       typeInfo.add(t);
     }
@@ -146,7 +146,7 @@ public class StaticChecker implements Visitor {
       // make sure the return type is a valid type
       checkReturnType(fdecl.returnType);
       // add to the symbol table as a function
-      symbolTable.add(funName, "fun");
+      symbolTable.add(funName, "fun",false);
       // add to typeInfo
       typeInfo.add(funName);
 
@@ -154,17 +154,17 @@ public class StaticChecker implements Visitor {
       // ...
       for (FunParam fparam : fdecl.params){
         //check if duplicate
-        if(typeInfo.get(funName,fparam.paramName.lexeme()) != null){
+        if(typeInfo.get(funName,fparam.paramName.lexeme()) != null && typeInfo.get(funName,fparam.paramName.lexeme()).first != null){
           error("cannot have duplicate parameter names in function " + funName, fdecl.funName);
         }
         //check if param type is valid
         checkParamType(fparam.paramType);
 
-        typeInfo.add(funName, fparam.paramName.lexeme(), fparam.paramType.lexeme());
+        typeInfo.add(funName, fparam.paramName.lexeme(), fparam.paramType.lexeme(),false);
       }
 
       // add the return type
-      typeInfo.add(funName, "return", fdecl.returnType.lexeme());
+      typeInfo.add(funName, "return", fdecl.returnType.lexeme(),false);
     }
 
     // TODO: (3) ensure "void main()" defined and it has correct
@@ -174,7 +174,7 @@ public class StaticChecker implements Visitor {
     Token mainError = new Token(null,currType,0,0);
     if(symbolTable.nameExists("main")){
       //check if void
-      String s = typeInfo.get("main","return");
+      String s = typeInfo.get("main","return").first;
       if(!s.equals("void")){
         error("must define void main()",mainError);
       }
@@ -203,7 +203,7 @@ public class StaticChecker implements Visitor {
     symbolTable.pushEnvironment();
     for(VarDeclStmt vdecl: node.vdecls){
       vdecl.accept(this);
-      typeInfo.add(node.typeName.lexeme(), vdecl.varName.lexeme(), currType);
+      typeInfo.add(node.typeName.lexeme(), vdecl.varName.lexeme(), currType, false);
     }
     symbolTable.popEnvironment();
   }
@@ -213,7 +213,7 @@ public class StaticChecker implements Visitor {
     symbolTable.pushEnvironment();
 
     for(FunParam p : node.params){
-      symbolTable.add(p.paramName.lexeme(),p.paramType.lexeme());
+      symbolTable.add(p.paramName.lexeme(),p.paramType.lexeme(),false);
     }
 
     boolean returned = false;
@@ -224,7 +224,7 @@ public class StaticChecker implements Visitor {
       s.accept(this);
     }
 
-    String returnType = typeInfo.get(node.funName.lexeme(), "return");
+    String returnType = typeInfo.get(node.funName.lexeme(), "return").first;
 
     if(returned){
       if(!returnType.equals(currType) && !currType.equals("void")){
@@ -245,7 +245,7 @@ public class StaticChecker implements Visitor {
     String expType = currType;
     String varName = node.varName.lexeme();
 
-    if(!expType.equals("int") && !expType.equals("double") && !expType.equals("char") && !expType.equals("string") && !expType.equals("bool") && !expType.equals("void") && (symbolTable.get(expType) == null || !symbolTable.get(expType).equals("type"))){
+    if(!expType.equals("int") && !expType.equals("double") && !expType.equals("char") && !expType.equals("string") && !expType.equals("bool") && !expType.equals("void") && ( symbolTable.get(expType)==null || symbolTable.get(expType).first == null || !symbolTable.get(expType).first.equals("type"))){
       if(node.expr.first instanceof SimpleTerm){
         SimpleTerm s = (SimpleTerm)node.expr.first;
         if(s.rvalue instanceof IDRValue){
@@ -282,9 +282,9 @@ public class StaticChecker implements Visitor {
     
     if(node.typeName != null){
       currType = node.typeName.lexeme();
-      symbolTable.add(node.varName.lexeme(),currType);
+      symbolTable.add(node.varName.lexeme(),currType,false);
     } else
-      symbolTable.add(node.varName.lexeme(),expType);
+      symbolTable.add(node.varName.lexeme(),expType,false);
 
   }
   
@@ -301,18 +301,28 @@ public class StaticChecker implements Visitor {
       String m = varName + " is not defined ";
       error(m,node.lvalue.get(0));
     }
-
-    String lhsType = symbolTable.get(varName);
+    String lhsType;
+    if(symbolTable.get(varName) == null)
+      lhsType = null;
+    else
+      lhsType = symbolTable.get(varName).first;
     
     //check for more complex paths
     if(node.lvalue.size() > 1){
       String prevType = lhsType;
       for(Token t: node.lvalue){
-        String type = symbolTable.get(t.lexeme());
+        String type;
+        if(symbolTable.get(t.lexeme()) == null)
+          type = null;
+        else 
+          type = symbolTable.get(t.lexeme()).first;
         
         if(type == null){
           //not init type - part of the path
-          lhsType = typeInfo.get(prevType,t.lexeme());
+          if(typeInfo.get(prevType,t.lexeme()) == null)
+            lhsType = null;
+          else
+            lhsType = typeInfo.get(prevType,t.lexeme()).first;
           if(lhsType == null){
             String m = prevType + " does not have field "+ t.lexeme();
             error(m,t);
@@ -387,7 +397,7 @@ public class StaticChecker implements Visitor {
 
   public void visit(ForStmt node) throws MyPLException {
     symbolTable.pushEnvironment();               
-    symbolTable.add(node.varName.lexeme(),"int");
+    symbolTable.add(node.varName.lexeme(),"int",false);
 
     node.start.accept(this);
     String start = currType;
@@ -424,7 +434,11 @@ public class StaticChecker implements Visitor {
       error(m,node.varName);
     }
     //check if primitive - no deletion of primitive chars
-    String type = symbolTable.get(node.varName.lexeme());
+    String type;
+    if(symbolTable.get(node.varName.lexeme()) == null)
+      type = null;
+    else
+      type = symbolTable.get(node.varName.lexeme()).first;
     //"int", "double", "bool", "char", "string"
     if(type.equals("int") || type.equals("double") || type.equals("char") || type.equals("string")){
       String m = "cannot delete a primitive type";
@@ -545,7 +559,7 @@ public class StaticChecker implements Visitor {
       if(!symbolTable.nameExists(funName)){
         error(funName + "does not exist",node.funName);
       }
-      if(!symbolTable.get(funName).equals("fun")){
+      if(!symbolTable.get(funName).first.equals("fun")){
         error(funName + "is not defined as a function", node.funName);
       }
 
@@ -556,7 +570,11 @@ public class StaticChecker implements Visitor {
 
       for(int i=0; i<params.size() -1; ++i){
         String paramName = params.get(i);
-        String paramType = typeInfo.get(funName, paramName);
+        String paramType;
+        if(typeInfo.get(funName, paramName) == null)
+          paramType = null;
+        else
+          paramType = typeInfo.get(funName, paramName).first;
         
         node.args.get(i).accept(this);
         String argsType = currType;
@@ -566,8 +584,10 @@ public class StaticChecker implements Visitor {
           error(m,getFirstToken(node.args.get(i)));
         }
       } 
-
-      currType = typeInfo.get(funName,"return");
+      if(typeInfo.get(funName,"return") == null)
+        currType = null;
+      else
+        currType = typeInfo.get(funName,"return").first;
     }
     
   }
@@ -601,7 +621,7 @@ public class StaticChecker implements Visitor {
       error(typeName + "has not been defined",node.typeName);
     }
 
-    if(!symbolTable.get(typeName).equals("type")){
+    if(!symbolTable.get(typeName).first.equals("type")){
       error(typeName + " is not a user defined variable",node.typeName);
     }
 
@@ -612,10 +632,17 @@ public class StaticChecker implements Visitor {
   public void visit(IDRValue node) throws MyPLException {
     String prevType = "";
     for(Token t: node.path){
-      String type = symbolTable.get(t.lexeme());
+      String type;
+      if(symbolTable.get(t.lexeme()) == null)
+        type = null;
+      else
+        type = symbolTable.get(t.lexeme()).first;
       if(type == null){
         //not init type - part of the path
-        currType = typeInfo.get(prevType,t.lexeme());
+        if(typeInfo.get(prevType,t.lexeme()) == null)
+          currType = null;
+        else
+          currType = typeInfo.get(prevType,t.lexeme()).first;
         if(currType == null){
           String m = prevType + "does not have field "+ t.lexeme();
           error(m,t);

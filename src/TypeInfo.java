@@ -15,7 +15,7 @@ import java.util.Set;
 public class TypeInfo {
 
   // a type has a name and a set of component name-type pairs
-  private Map<String,Map<String,String>> types = new HashMap<>();
+  private Map<String,Map<String,Tuple<String,Boolean>>> types = new HashMap<>();
 
   /**
    * Returns the current set of type names being stored.
@@ -50,17 +50,17 @@ public class TypeInfo {
    * @param componentName the name of the component to add
    * @param componentType the type of the component to add
    */
-  public void add(String type, String componentName, String componentType) {
-    types.get(type).put(componentName, componentType);
+  public void add(String type, String componentName, String componentType, boolean isConst) {
+    types.get(type).put(componentName, new Tuple(componentType,isConst));
   }
 
   /**
    * Returns the component type for the given component.
    * @param type the name of the type that contains the component
    * @param componentName the name of the type component
-   * @return the type of the given component
+   * @return the type of the given component and is constant
    */
-  public String get(String type, String componentName) {
+  public Tuple<String,Boolean> get(String type, String componentName) {
     if (types.containsKey(type))
       return types.get(type).get(componentName);
     return null;
