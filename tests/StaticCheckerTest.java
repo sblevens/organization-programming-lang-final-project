@@ -1424,5 +1424,40 @@ public class StaticCheckerTest {
 
   }
   
+
+
+  /* tests for constant vars */
+
+  @Test
+  public void basicConstVarDecl() throws Exception {
+    String s = buildString
+      ("fun void main() {",
+        "const var x = 0",
+        "}"
+       );
+    TypeInfo typeInfo = new TypeInfo();
+    StaticChecker checker = new StaticChecker(typeInfo);
+    buildParser(s).parse().accept(checker);
+    assertTrue(typeInfo.types().contains("main"));
+    assertEquals(1, typeInfo.components("main").size());
+    assertEquals("void", typeInfo.get("main", "return").first);
+
+  }
+
+  @Test
+  public void invalidConstVarAssignment() throws Exception {
+    String s = buildString
+      ("fun void main() {",
+        "const var x = 0",
+        "x = 2",
+        "}"
+       );
+    try {
+      buildParser(s).parse().accept(buildChecker());
+      fail("error not detected");
+    } catch(MyPLException ex) {
+      assertTrue(ex.getMessage().startsWith("STATIC_ERROR:"));
+    }
+  }
   
 }

@@ -213,6 +213,7 @@ public class StaticChecker implements Visitor {
     symbolTable.pushEnvironment();
 
     for(FunParam p : node.params){
+      //how to determine if param is const???
       symbolTable.add(p.paramName.lexeme(),p.paramType.lexeme(),false);
     }
 
@@ -282,20 +283,24 @@ public class StaticChecker implements Visitor {
     
     if(node.typeName != null){
       currType = node.typeName.lexeme();
-      symbolTable.add(node.varName.lexeme(),currType,false);
+      symbolTable.add(node.varName.lexeme(),currType,node.isConst);
     } else
-      symbolTable.add(node.varName.lexeme(),expType,false);
+      symbolTable.add(node.varName.lexeme(),expType,node.isConst);
 
   }
   
 
   public void visit(AssignStmt node) throws MyPLException {
+    String varName = node.lvalue.get(0).lexeme();
 
-    // TODO
+    //check if lhs is const var
+    if(symbolTable.get(varName) != null && symbolTable.get(varName).second){
+      String m = varName + " is a constant variable - cannot be assigned ";
+      error(m,node.lvalue.get(0));
+    }
+
     node.expr.accept(this);
     String rhsType = currType;
-
-    String varName = node.lvalue.get(0).lexeme();
 
     if(!symbolTable.nameExists(varName)){
       String m = varName + " is not defined ";
