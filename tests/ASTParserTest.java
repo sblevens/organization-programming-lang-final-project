@@ -428,8 +428,23 @@ public class ASTParserTest {
     } catch(MyPLException e){
       // assertEquals()
     }
-    
   }
 
+  @Test
+  public void basicConstParam() throws Exception {
+    String s = buildString 
+    ("fun void c(int i, const int k) {",
+     "}");
+    ASTParser parser = buildParser(s);
+    Program p = parser.parse();
+    assertEquals(1, p.fdecls.size());
+    assertEquals(2, p.fdecls.get(0).params.size());
+    assertEquals(false, p.fdecls.get(0).params.get(0).isConst);
+    assertEquals("int", p.fdecls.get(0).params.get(0).paramType.lexeme());
+    assertEquals(true, p.fdecls.get(0).params.get(1).isConst);
+    assertEquals("int", p.fdecls.get(0).params.get(1).paramType.lexeme());
+  }
+
+  
 
 }

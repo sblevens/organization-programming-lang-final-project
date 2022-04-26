@@ -1459,5 +1459,80 @@ public class StaticCheckerTest {
       assertTrue(ex.getMessage().startsWith("STATIC_ERROR:"));
     }
   }
-  
+
+  @Test
+  public void basicConstParams() throws Exception {
+    String s = buildString 
+    ("fun void c(int i, const int k) {",
+     "}",
+     "fun void main() { }"
+     );
+    
+      TypeInfo typeInfo = new TypeInfo();
+      StaticChecker checker = new StaticChecker(typeInfo);
+      buildParser(s).parse().accept(checker);
+      assertTrue(typeInfo.types().contains("main"));
+      assertTrue(typeInfo.types().contains("c"));
+      assertEquals(3, typeInfo.components("c").size());
+      List<String> components = new ArrayList(typeInfo.components("c"));
+      assertEquals("i", components.get(0));
+      assertEquals("int", typeInfo.get("c", "i").first);
+      assertEquals(false, typeInfo.get("c", "i").second);
+      assertEquals("k", components.get(1));
+      assertEquals("int", typeInfo.get("c", "k").first);    
+      assertEquals(true, typeInfo.get("c", "k").second);    
+      assertEquals("return", components.get(2));
+      assertEquals("void", typeInfo.get("c", "return").first);   
+  }  
+
+  @Test
+  public void goodConstArgument() throws Exception {
+    String s = buildString 
+    ("fun void c(int i, const int k) {",
+     "}",
+     "fun void main() { ",
+     " const var k = 1 ",
+     " var i = 2 ",
+     " c(i,k) ",
+     "}"
+     );
+
+    buildParser(s).parse().accept(buildChecker());
+  }
+
+  @Test
+  public void NonConstArgument() throws Exception {
+    String s = buildString 
+    ("fun void c(int i, const int k) {",
+     "}",
+     "fun void main() { ",
+     " var k = 1 ",
+     " var i = 2 ",
+     " c(i,k) ",
+     "}"
+     );
+
+    buildParser(s).parse().accept(buildChecker());
+  }
+
+  @Test
+  public void badConstArgument() throws Exception {
+    String s = buildString 
+    ("fun void c(int i, int k) {",
+     "}",
+     "fun void main() { ",
+     " const var k = 1 ",
+     " var i = 2 ",
+     " c(i,k) ",
+     "}"
+     );
+
+    try {
+      buildParser(s).parse().accept(buildChecker());
+      fail("error not detected");
+    } catch(MyPLException ex) {
+      assertTrue(ex.getMessage().startsWith("STATIC_ERROR:"));
+    }
+  }
+
 }

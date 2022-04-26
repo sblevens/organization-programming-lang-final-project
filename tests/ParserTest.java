@@ -345,4 +345,15 @@ public class ParserTest {
     }
   }
 
+  @Test
+  public void basicConstParam() throws Exception {
+    String s = buildString 
+    ("fun void c(int i, const int k) {",
+     "}");
+    Parser parser = buildParser(s);
+    parser.parse();
+  }
+
+
+
 }

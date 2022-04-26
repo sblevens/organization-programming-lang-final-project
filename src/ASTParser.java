@@ -196,7 +196,7 @@ public class ASTParser {
     v.expr = e;
   }
 
-  private void expr(Expr e)  throws MyPLException{
+  private void expr(Expr e) throws MyPLException {
     //<expr> ::= ( <rvalue> | NOT <expr> | LPAREN <expr> RPAREN ) ( <operator> <expr> | E )
     if(isExpr()){
       ExprTerm t;
@@ -307,8 +307,12 @@ public class ASTParser {
   }
 
   private void params(List<FunParam> p) throws MyPLException {
-    //<params> ::= <dtype> ID ( COMMA <dtype> ID )* | E
+    //<params> ::= (const | E) <dtype> ID ( COMMA <dtype> ID )* | E
     FunParam f = new FunParam();
+    if(match(TokenType.CONST)){
+      f.isConst = true;
+      advance();
+    }
     if(match(TokenType.ID) || isPrimitiveType()){
       f.paramType = currToken;
       advance();
@@ -318,6 +322,10 @@ public class ASTParser {
       while(match(TokenType.COMMA)){
         f = new FunParam();
         advance();
+        if(match(TokenType.CONST)){
+          f.isConst = true;
+          advance();
+        }
         if(match(TokenType.ID) || isPrimitiveType()){
           f.paramType = currToken;
           advance();

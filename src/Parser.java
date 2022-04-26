@@ -226,12 +226,18 @@ public class Parser {
   }
 
   private void params() throws MyPLException {
-    //<params> ::= <dtype> ID ( COMMA <dtype> ID )* | E
+    //<params> ::= (const | E) <dtype> ID ( COMMA <dtype> ID )* | E
+    if(match(TokenType.CONST)){
+      advance();
+    }
     if(match(TokenType.ID) || isPrimitiveType()){
       advance();
       eat(TokenType.ID,"expecting id");
       while(match(TokenType.COMMA)){
         advance();
+        if(match(TokenType.CONST)){
+          advance();
+        }
         if(match(TokenType.ID) || isPrimitiveType()){
           advance();
         } else {

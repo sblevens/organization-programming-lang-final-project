@@ -24,6 +24,8 @@ public class StaticChecker implements Visitor {
   private String currType = null;
   // the program's user-defined (record) types and function signatures
   private TypeInfo typeInfo = null;
+  // the current check for if an argument is constant
+  private Boolean currIsConst = false;
 
   //--------------------------------------------------------------------
   // helper functions:
@@ -160,7 +162,7 @@ public class StaticChecker implements Visitor {
         //check if param type is valid
         checkParamType(fparam.paramType);
 
-        typeInfo.add(funName, fparam.paramName.lexeme(), fparam.paramType.lexeme(),false);
+        typeInfo.add(funName, fparam.paramName.lexeme(), fparam.paramType.lexeme(), fparam.isConst);
       }
 
       // add the return type
@@ -576,13 +578,34 @@ public class StaticChecker implements Visitor {
       for(int i=0; i<params.size() -1; ++i){
         String paramName = params.get(i);
         String paramType;
+        Boolean isConst = false;
         if(typeInfo.get(funName, paramName) == null)
           paramType = null;
-        else
+        else {
           paramType = typeInfo.get(funName, paramName).first;
+          isConst = typeInfo.get(funName, paramName).second;
+        }
         
         node.args.get(i).accept(this);
         String argsType = currType;
+        Boolean argIsConst = false;
+        SimpleTerm s;
+        RValue r;
+        IDRValue idr;
+        if(node.args.get(i).first instanceof SimpleTerm){
+          s = (SimpleTerm)node.args.get(i).first;
+          r = s.rvalue;
+          if(r instanceof IDRValue){
+              argIsConst = currIsConst;
+          }
+        }
+        
+        // if the argument is a constant, have to check the parameter is safe for constants
+        if(argIsConst && !isConst){
+          String m = "expecting parameter to accept constant argument";
+          error(m,getFirstToken(node.args.get(i)));
+        }
+        
 
         if(!paramType.equals(argsType) && !argsType.equals("void")){
           String m = "expecting "+ paramType + " as arg, found " + argsType;
@@ -636,18 +659,23 @@ public class StaticChecker implements Visitor {
       
   public void visit(IDRValue node) throws MyPLException {
     String prevType = "";
+    Boolean isConst = false;
     for(Token t: node.path){
       String type;
       if(symbolTable.get(t.lexeme()) == null)
         type = null;
-      else
+      else {
         type = symbolTable.get(t.lexeme()).first;
+        isConst = symbolTable.get(t.lexeme()).second;
+      }
       if(type == null){
         //not init type - part of the path
         if(typeInfo.get(prevType,t.lexeme()) == null)
           currType = null;
-        else
+        else {
           currType = typeInfo.get(prevType,t.lexeme()).first;
+          currIsConst = typeInfo.get(prevType, t.lexeme()).second;
+        }
         if(currType == null){
           String m = prevType + "does not have field "+ t.lexeme();
           error(m,t);
@@ -657,6 +685,7 @@ public class StaticChecker implements Visitor {
         //init type
         currType = type;
         prevType = type;
+        currIsConst = isConst;
       }
     }
 

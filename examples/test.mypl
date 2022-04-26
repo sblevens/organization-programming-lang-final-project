@@ -1,4 +1,8 @@
 fun int f() {}
 fun void main() {
-   var x = f
+   const var x = 1
+   var i = 0
+   c(i,x)
 }
+
+fun void c(int i, int k) { }
