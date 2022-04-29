@@ -205,7 +205,7 @@ public class StaticChecker implements Visitor {
     symbolTable.pushEnvironment();
     for(VarDeclStmt vdecl: node.vdecls){
       vdecl.accept(this);
-      typeInfo.add(node.typeName.lexeme(), vdecl.varName.lexeme(), currType, false);
+      typeInfo.add(node.typeName.lexeme(), vdecl.varName.lexeme(), currType, vdecl.isConst);
     }
     symbolTable.popEnvironment();
   }
@@ -215,8 +215,7 @@ public class StaticChecker implements Visitor {
     symbolTable.pushEnvironment();
 
     for(FunParam p : node.params){
-      //how to determine if param is const???
-      symbolTable.add(p.paramName.lexeme(),p.paramType.lexeme(),false);
+      symbolTable.add(p.paramName.lexeme(),p.paramType.lexeme(),p.isConst);
     }
 
     boolean returned = false;
@@ -317,19 +316,24 @@ public class StaticChecker implements Visitor {
     //check for more complex paths
     if(node.lvalue.size() > 1){
       String prevType = lhsType;
+      Boolean isConst = false;
       for(Token t: node.lvalue){
         String type;
         if(symbolTable.get(t.lexeme()) == null)
           type = null;
-        else 
+        else {
           type = symbolTable.get(t.lexeme()).first;
+          isConst = symbolTable.get(t.lexeme()).second;
+        }
         
         if(type == null){
           //not init type - part of the path
           if(typeInfo.get(prevType,t.lexeme()) == null)
             lhsType = null;
-          else
+          else {
             lhsType = typeInfo.get(prevType,t.lexeme()).first;
+            currIsConst = typeInfo.get(prevType, t.lexeme()).second;
+          }
           if(lhsType == null){
             String m = prevType + " does not have field "+ t.lexeme();
             error(m,t);
@@ -339,9 +343,16 @@ public class StaticChecker implements Visitor {
           //init type
           lhsType = type;
           prevType = type;
+          currIsConst = isConst;
+        }
+        if(currIsConst){
+          String m = t.lexeme() + " is a constant variable - cannot be assigned ";
+          error(m,node.lvalue.get(0));
         }
       }
     }
+
+    
 
     if(!rhsType.equals("void") && !lhsType.equals(rhsType)){
       String m = "expecting " + lhsType + ", found " + rhsType;
@@ -589,6 +600,7 @@ public class StaticChecker implements Visitor {
         node.args.get(i).accept(this);
         String argsType = currType;
         Boolean argIsConst = false;
+        //only take isConst into account when expr is an idr value or new - doesn't make sense if its (x+1) etc.
         SimpleTerm s;
         RValue r;
         IDRValue idr;

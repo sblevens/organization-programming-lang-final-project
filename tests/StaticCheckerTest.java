@@ -1535,4 +1535,94 @@ public class StaticCheckerTest {
     }
   }
 
+
+  @Test
+  public void invalidConstArgumentAccess() throws Exception {
+    String s = buildString 
+    ("fun void c(int i, const int k) {",
+     "i = 9",
+     "k = 9",
+     "}",
+     "fun void main() { ",
+     " const var k = 1 ",
+     " var i = 2 ",
+     " c(i,k) ",
+     "}"
+     );
+
+    try {
+      buildParser(s).parse().accept(buildChecker());
+      fail("error not detected");
+    } catch(MyPLException ex) {
+      assertTrue(ex.getMessage().startsWith("STATIC_ERROR:"));
+    }
+  }
+  
+  @Test
+  public void goodConstTypes() throws Exception {
+    String s = buildString 
+    ("type T1 {}",
+       "type T2 {",
+       "  const var x = 0",
+       "  var string y = nil",
+       "  const var T2 z = nil",
+       "}",
+     "fun void main() { ",
+     "var t1 = new T1",
+     "var t2 = new T2",
+     "const var t3 = new T1",
+     "const var t4 = new T2",
+     "t2.y = \"Hello\"",
+     "}"
+     );
+
+    buildParser(s).parse().accept(buildChecker());
+  }
+
+  @Test
+  public void badConstTypesFieldAccess() throws Exception {
+    String s = buildString 
+    ("type T1 {}",
+       "type T2 {",
+       "  const var x = 0",
+       "  var string y = nil",
+       "  const var T2 z = nil",
+       "}",
+     "fun void main() { ",
+     "var t2 = new T2",
+     "t2.x = 0",
+     "}"
+     );
+
+    try {
+      buildParser(s).parse().accept(buildChecker());
+      fail("error not detected");
+    } catch(MyPLException ex) {
+      assertTrue(ex.getMessage().startsWith("STATIC_ERROR:"));
+    }
+  }
+
+   @Test
+  public void badConstTypeAccess() throws Exception {
+    String s = buildString 
+    ("type T1 {}",
+       "type T2 {",
+       "  const var x = 0",
+       "  var string y = nil",
+       "  const var T2 z = nil",
+       "}",
+     "fun void main() { ",
+     "const var t2 = new T2",
+     "t2.y = 0",
+     "}"
+     );
+
+    try {
+      buildParser(s).parse().accept(buildChecker());
+      fail("error not detected");
+    } catch(MyPLException ex) {
+      assertTrue(ex.getMessage().startsWith("STATIC_ERROR:"));
+    }
+  }
+
 }
