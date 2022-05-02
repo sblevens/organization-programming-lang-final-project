@@ -282,6 +282,7 @@ public class StaticChecker implements Visitor {
       }
     }
     
+    //if no errors, add to symboltable with boolean isConst
     if(node.typeName != null){
       currType = node.typeName.lexeme();
       symbolTable.add(node.varName.lexeme(),currType,node.isConst);
@@ -586,6 +587,7 @@ public class StaticChecker implements Visitor {
         error("incorrect number of params",getFirstToken(node.args.get(0)));
       }
 
+      //check parameters
       for(int i=0; i<params.size() -1; ++i){
         String paramName = params.get(i);
         String paramType;
@@ -600,10 +602,10 @@ public class StaticChecker implements Visitor {
         node.args.get(i).accept(this);
         String argsType = currType;
         Boolean argIsConst = false;
-        //only take isConst into account when expr is an idr value or new - doesn't make sense if its (x+1) etc.
+        //only take isConst into account when expr is an idr value - doesn't make sense if its (x+1) etc.
         SimpleTerm s;
         RValue r;
-        IDRValue idr;
+        //IDRValue idr;
         if(node.args.get(i).first instanceof SimpleTerm){
           s = (SimpleTerm)node.args.get(i).first;
           r = s.rvalue;

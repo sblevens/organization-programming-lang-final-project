@@ -1,8 +1,13 @@
 fun int f() {}
 fun void main() {
-   const var x = 1
-   var i = 0
-   c(i,x)
+   
 }
 
-fun void c(int i, int k) { }
+
+type T1 {
+   var i = 0
+}
+
+fun void test(const T1 t){
+   t.i = 5
+}
